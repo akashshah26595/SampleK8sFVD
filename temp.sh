@@ -5,7 +5,7 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-JQ="$DIR/jq"
+#JQ="$DIR/jq"
 echo "Value of $JQ"
 #MOUNT_CIFS="$DIR/mount.cifs"
 
@@ -46,10 +46,10 @@ detach() {
 domount() {
     echo "Value of $JQ in domount method"
 	#DMDEV="$2"
-    MNTPATH=$(cat "$1"|"$JQ" -r '.spec.containers.mountPath')
-	VOLUME_SRC=$(cat "$1"|"$JQ" -r '.spec.volumes.flexVolume.options.source')
+    MNTPATH=$(cat "$1"|jq -r '.spec.containers.mountPath')
+	VOLUME_SRC=$(cat "$1"|jq -r '.spec.volumes.flexVolume.options.source')
     #READ_MODE=$(echo "$3"|"$JQ" -r '.["kubernetes.io/readwrite"]')
-    MOUNT_OPTIONS=$(cat "$1"|"$JQ" -r '.spec.volumes.flexVolume.options.mountOptions')
+    MOUNT_OPTIONS=$(cat "$1"|jq -r '.spec.volumes.flexVolume.options.mountOptions')
         
         #USERNAME=$(echo "$3"|"$JQ" -r '.["kubernetes.io/secret/username"] // empty'|base64 -d)
         #PASSWORD=$(echo "$3"|"$JQ" -r '.["kubernetes.io/secret/password"] // empty'|base64 -d)
@@ -92,7 +92,7 @@ unmount() {
                 exit 0
         fi
 
-        umount "${MNTPATH}" &> /dev/null
+        sudo umount "${MNTPATH}" &> /dev/null
         if [ $? -ne 0 ]; then
                 err '{ "status": "Failed", "message": "Failed to unmount volume at '${MNTPATH}'"}'
                 exit 1
