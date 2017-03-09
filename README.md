@@ -87,7 +87,7 @@ ls /tmp
 
 Volume "temp" should be present, which proves that volume creation was successful.
 
-* #### To verify whether volume mount was successful on the pod:
+* To verify whether volume mount was successful on the pod:
 
 Get container ID of nginx container
 ```
