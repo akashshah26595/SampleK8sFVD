@@ -1,7 +1,6 @@
 #!/bin/bash
 
 sudo apt-get -y install jq
-#echo "Checkpoint 1"
 usage() {
     err "Invalid usage. Usage: "
     err "\t$0 init"
@@ -10,20 +9,15 @@ usage() {
     err "\t$0 getvolumename <json params>"
     exit 1
 }
-
 err() {
-#       echo "Checkpoint 2"
     echo -ne $* 1>&2
-
 }
 
 log() {
-#    echo "Checkpoint 3"
     echo -ne $* >&1
 }
 
 ismounted() {
-#    echo "Checkpoint 4"
     MOUNT=`findmnt -n ${MNTPATH} 2>/dev/null | cut -d' ' -f1`
     if [ "${MOUNT}" == "${MNTPATH}" ]; then
         echo "1"
@@ -33,30 +27,28 @@ ismounted() {
 }
 
 domount() {
-#    echo "Checkpoint 5"
-    #MNTPATH="$1"
-    #SOURCE=$(echo "$2" | jq -r '.source')
-    MNTPATH=$(echo "$2"|jq -r '.spec.containers.mountPath')
-    VOLUME_SRC=$(echo "$2"|jq -r '.spec.volumes.flexVolume.options.source')
-    MOUNT_OPTIONS=$(echo "$2" | jq -r '.mountOptions')
-#    echo "Volume Source {VOLUME_SRC}"
-#    echo "Mount Path {MNTPATH}"
+    MNTPATH="$1"
+    VOLUME_SRC=$(echo "$2" | jq -r '.source')
+    echo $MNTPATH >> /usr/libexec/kubernetes/kubelet-plugins/volume/exec/cb~temp/dump.txt
+    MOUNT_OPTIONS=$(echo $2 | jq -r '.mountOptions')
+    
+    # To visualize the JSON parameters received by FlexVolume
+    #echo $2 >> /usr/libexec/kubernetes/kubelet-plugins/volume/exec/cb~temp/dump.txt
+    #echo $1 >> /usr/libexec/kubernetes/kubelet-plugins/volume/exec/cb~temp/mount_dump.txt
+
         if [ $(ismounted) -eq 1 ] ; then
             log "{\"status\": \"Success\"}"
             exit 0
         fi
-#        echo "Checkpoint 6"
 
         sudo mkdir -p ${MNTPATH} &> /dev/null
         sudo mkdir -p ${VOLUME_SRC} &> /dev/null
-#        echo "Checkpoint 7"
 
         sudo mount -o rw,noexec,nosuid,nodev,bind "${VOLUME_SRC}" "${MNTPATH}" &> /dev/null
-#        echo "Checkpoint 8"
 
         if [ $? -ne 0 ]; then
                 2>&1
-#        echo "Checkpoint 9"
+
                err '{ "status": "Failure", "message": "Failed to mount device '${VOLUME_SRC}' at '${MNTPATH}' , volume_src: '${VOLUME_SRC}'"}'
                exit 1
         fi
