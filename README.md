@@ -29,25 +29,35 @@ vagrant plugin install vagrant-scp
 5. On host machine, change directory to the path where the repository is placed and perform the following operation to transfer the files to the nodes.
 
 ```
-vagrant scp * kubemaster-01:/usr/libexec/kubernetes/kubelet-plugins/volume/exec/cb~temp/
-vagrant scp * kubeminion-01:/usr/libexec/kubernetes/kubelet-plugins/volume/exec/cb~temp/
+vagrant scp mount.yaml kubemaster-01:/usr/libexec/kubernetes/kubelet-plugins/volume/exec/cb~temp/mount.yaml
+vagrant scp temp kubemaster-01:/usr/libexec/kubernetes/kubelet-plugins/volume/exec/cb~temp/
 ```
 
-6. On kubemaster VM, change directory to the driver path.
+  Perform similar operation on other Kubernetes nodes.
+
+6. On kubemaster VM, change directory to the driver path, and make the driver executable.
 
 ```
 cd /usr/libexec/kubernetes/kubelet-plugins/volume/exec/cb~temp/
+sudo chmod +x temp
 ```
 
-7. Create a pod that uses this volume driver. You can modify the mount point and volume source in mount.yaml file.
+7. Restart kubelet(On Kubernetes Nodes). Ensure they are running.
+
+```
+sudo systemctl restart kubelet
+sudo systemctl status kubelet
+```
+
+8. Create a pod that uses this volume driver. You can modify the mount point and volume source in mount.yaml file.
 
 ```
 kubectl create -f mount.yaml
 ```
 
-This creates a pod with nginx web server and a volume mounted at the mount point specified in yaml file.
+This creates a pod with nginx web server and a mount point specified in yaml file.
 
-8. To perform driver operations manually: 
+9. To perform driver operations manually: 
 
 ```
 sudo chmod +x temp.sh
@@ -60,10 +70,34 @@ Usage:
 ./temp.sh mount <json params>
 ./temp.sh unmount <mount dir>
 
-Example:
-./temp.sh init
-./temp.sh attach mount.json
-./temp.sh detach /mnt/temp
-./temp.sh mount mount.json
-./temp.sh unmount /mnt/temp
 ```
+
+10. To verify that volume creation was successful.
+
+Find out the kubernetes node on which the pod was deployed, by using following command:
+```
+kubectl describe pod nginx
+```
+
+On that node:
+```
+ls /tmp
+```
+
+Volume "temp" should be present, which proves that volume creation was successful.
+
+11. To verify whether volume mount was successful on the pod:
+
+Get container ID of nginx container
+```
+sudo docker ps
+```
+Run the docker container
+```
+sudo docker exec -it <container_id> /bin/bash
+```
+Inside the container:
+```
+ls /mnt
+```
+Volume "temp" should be present, which proves that volume mount was successful.
